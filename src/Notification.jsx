@@ -39,5 +39,3 @@ export const Notification = ({ message, duration = 3000 }) => {
     </div>
   );
 };
-
-export default Notification;

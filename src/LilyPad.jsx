@@ -31,5 +31,3 @@ export const LilyPad = ({ x, y, size, isActive, onClick }) => {
     </div>
   );
 };
-
-export default LilyPad;

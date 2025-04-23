@@ -1,46 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-
-export const Fly = ({ id, x, y, type, frogPosition, onCaught, lilyPads }) => {
-  // Store the full fly object for reference to relativeX and relativeY
-  const fly = { id, x, y, type, relativeX: x / window.innerWidth, relativeY: y / window.innerHeight };
+// Accept gameWidth and gameHeight as props
+export const Fly = ({ id, x, y, type, frogPosition, onCaught, lilyPads, gameWidth, gameHeight }) => {
+  // Use initial x, y for position, relative coords calculated if needed later
   const [position, setPosition] = useState({ x, y });
-  const [windowSize, setWindowSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight
-  });
-  
-  // Update position when window is resized
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-      
-      // Update fly position based on relative coordinates
-      if (typeof fly !== 'undefined' && typeof fly.relativeX === 'number' && typeof fly.relativeY === 'number') {
-        setPosition({
-          x: fly.relativeX * window.innerWidth,
-          y: fly.relativeY * window.innerHeight
-        });
-      } else if (typeof x === 'number' && typeof y === 'number') {
-        const relativeX = x / windowSize.width;
-        const relativeY = y / windowSize.height;
-        
-        setPosition({
-          x: relativeX * window.innerWidth,
-          y: relativeY * window.innerHeight
-        });
-      }
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [x, y, windowSize.width, windowSize.height]);
+  // Removed windowSize state and resize effect
   const [hovering, setHovering] = useState(true);
   const [currentFrame, setCurrentFrame] = useState(1);
+  const [isFlipped, setIsFlipped] = useState(false); // State to track horizontal flip
   const flyRef = useRef(null);
-  
+  const prevXRef = useRef(x); // Ref to store previous X position
   // Target lily pad for movement
   const [targetLilyPad, setTargetLilyPad] = useState(null);
   const [moveTimer, setMoveTimer] = useState(null);
@@ -79,33 +47,40 @@ export const Fly = ({ id, x, y, type, frogPosition, onCaught, lilyPads }) => {
     const animate = () => {
       const elapsed = Date.now() - startTime;
       
-      // Basic hovering motion
-      // Scale hover motion based on window size for responsive behavior
-      const scaleX = windowSize.width / 1000; // Reference width of 1000px
-      const scaleY = windowSize.height / 800; // Reference height of 800px
-      const movementScale = Math.min(1, Math.max(0.5, (scaleX + scaleY) / 2));
-      
-      // Apply scaled movement
+      // Basic hovering motion - Use fixed game size for reference? Keep it simpler for now.
+      // Let's use a fixed movement scale for simplicity with the fixed container
+      const movementScale = 0.8; // Adjust as needed
+      // Apply movement based on original spawn position (x, y props)
       let newX = x + Math.sin(elapsed / 1000) * 15 * movementScale;
       let newY = y + Math.cos(elapsed / 1500) * 10 * movementScale;
-      
       // Add attraction to target lily pad if one exists
       if (targetLilyPad) {
         // Vector toward target lily pad
         const dx = targetLilyPad.x - newX;
         const dy = targetLilyPad.y - newY;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
         // Attraction strength - stronger when further away, weaker when close
-        // Scale attraction strength based on window size
-        const attractionStrength = Math.min(0.01, 0.5 / distance) * movementScale;
-        
-        // Apply attraction force with some randomness
-        newX += dx * attractionStrength * (0.5 + Math.random() * 0.5);
-        newY += dy * attractionStrength * (0.5 + Math.random() * 0.5);
+        // Use a simpler strength calculation
+        const attractionStrength = Math.min(0.01, 1 / (distance + 10)) * movementScale;
+        // Apply attraction force
+        newX += dx * attractionStrength;
+        newY += dy * attractionStrength;
+        // Clamp position within game bounds (use gameWidth/gameHeight)
+        const padding = 10; // Small padding
+        newX = Math.max(padding, Math.min(gameWidth - padding, newX));
+        newY = Math.max(padding, Math.min(gameHeight - padding, newY));
       }
       
+      // Determine flip based on direction change
+      if (newX < prevXRef.current) {
+          setIsFlipped(true); // Moving left
+      } else if (newX > prevXRef.current) {
+          setIsFlipped(false); // Moving right
+      }
+      // If newX === prevXRef.current, keep the current flip state
       setPosition({ x: newX, y: newY });
+      prevXRef.current = newX; // Update previous X position
+      
       animationFrame = requestAnimationFrame(animate);
     };
     
@@ -114,8 +89,7 @@ export const Fly = ({ id, x, y, type, frogPosition, onCaught, lilyPads }) => {
     return () => {
       cancelAnimationFrame(animationFrame);
     };
-  }, [x, y, targetLilyPad]);
-  
+  }, [x, y, targetLilyPad, gameWidth, gameHeight]); // Added game dimensions
   // Animate through fly frames
   useEffect(() => {
     if (!hovering) return;
@@ -150,11 +124,13 @@ export const Fly = ({ id, x, y, type, frogPosition, onCaught, lilyPads }) => {
     const interval = setInterval(checkFrogDistance, 100);
     return () => clearInterval(interval);
   }, [id, position, frogPosition, onCaught, hovering]);
-  
-  // Fly appearance - scale based on window size
-  const baseFlySize = 40;
-  const isSmallScreen = windowSize.width < 768;
-  const flySize = isSmallScreen ? baseFlySize * 0.8 : baseFlySize;
+  // Fly appearance - use fixed size for now
+  const flySize = 35; // Fixed fly size
+  // Determine if the game area is "small" based on its fixed dimensions
+  const isSmallGame = gameWidth < 600 || gameHeight < 500;
+  const animationSpeed = isSmallGame ? '0.4s' : '0.5s';
+  const hoverAmount = isSmallGame ? '-3px' : '-5px';
+  const rotateAmount = isSmallGame ? '3deg' : '5deg';
   const flyImage = `Fly${currentFrame}`;
   const flyImageId = 
     currentFrame === 1 ? 'ekp0' : 
@@ -173,8 +149,9 @@ export const Fly = ({ id, x, y, type, frogPosition, onCaught, lilyPads }) => {
         height: flySize,
         zIndex: 15,
         transition: 'transform 0.1s ease',
-        animation: hovering ? `fly-hover ${isSmallScreen ? '0.4s' : '0.5s'} infinite alternate` : 'none',
-        transform: `rotate(${Math.sin(Date.now() / 500) * (isSmallScreen ? 7 : 10)}deg)`,
+        animation: hovering ? `fly-hover ${animationSpeed} infinite alternate` : 'none',
+        // Simpler rotation based on hover animation timing
+        // transform: `rotate(${Math.sin(Date.now() / 500) * (isSmallGame ? 7 : 10)}deg)`,
       }}
     >
       <img 
@@ -183,6 +160,8 @@ export const Fly = ({ id, x, y, type, frogPosition, onCaught, lilyPads }) => {
         style={{
           width: '100%',
           height: '100%',
+          transform: isFlipped ? 'scaleX(-1)' : 'scaleX(1)', // Apply flip transform
+          transition: 'transform 0.2s ease-in-out', // Smoother flip transition
         }}
       />
       
@@ -190,12 +169,10 @@ export const Fly = ({ id, x, y, type, frogPosition, onCaught, lilyPads }) => {
         {`
           @keyframes fly-hover {
             0% { transform: translateY(0) rotate(0deg); }
-            100% { transform: translateY(${isSmallScreen ? '-3px' : '-5px'}) rotate(${isSmallScreen ? '3deg' : '5deg'}); }
+            100% { transform: translateY(${hoverAmount}) rotate(${rotateAmount}); }
           }
         `}
       </style>
     </div>
   );
 };
-
-export default Fly;

@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-
-export const Frog = ({ x, y, onFlyCaught, color }) => {
+// Accept ownedItems prop
+export const Frog = ({ x, y, color, ownedItems }) => { 
   const [frogState, setFrogState] = useState('idle'); // idle, jumping, eating
   const [currentImage, setCurrentImage] = useState(1);
-  
   // Ensure color is always valid
   const validColor = ['green', 'red', 'yellow'].includes(color) ? color : 'green';
   const [rotation, setRotation] = useState(0);
@@ -71,8 +70,7 @@ export const Frog = ({ x, y, onFlyCaught, color }) => {
       setTimeout(() => {
         clearInterval(tongueInterval);
         setTongueExtended(false);
-        onFlyCaught();
-        
+        // onFlyCaught() call removed here
         // Return to idle state only if we weren't jumping
         setTimeout(() => {
           if (frogState === 'eating') {
@@ -82,8 +80,8 @@ export const Frog = ({ x, y, onFlyCaught, color }) => {
               setCurrentImage(1);
             }
           }
-        }, 200);
-      }, 300);
+        }, 200); // Keep brief pause before returning fully to idle
+      }, 150); // Reduce tongue extension time
     }
   };
   
@@ -226,8 +224,42 @@ export const Frog = ({ x, y, onFlyCaught, color }) => {
           />
         </div>
       )}
+      {/* Conditionally render the hat based on equipped status */}
+      {ownedItems?.hat_placeholder === 'equipped' && ( // Check for 'equipped' status
+        <img
+          src="https://play.rosebud.ai/assets/8 bit hat.png?oXIp" // Use the 8-bit hat asset
+          alt="Hat"
+          style={{
+            position: 'absolute',
+            top: '2px', // Lowered the hat significantly to sit on the head
+            left: '18px', // Adjusted slightly left for better centering
+            width: '55px', // Made slightly smaller
+            height: 'auto',
+            zIndex: 21, // Ensure hat is above frog but below tongue tip if needed
+            // Rotation is added, parent container rotation still applies during jumps
+            transform: 'rotate(-5deg)', // Added a slight tilt
+            pointerEvents: 'none', // Make sure hat doesn't interfere with clicks
+            transition: 'top 0.1s ease-out, left 0.1s ease-out', // Smooth position changes slightly if needed
+          }}
+        />
+      )}
+      {/* Conditionally render the Cowboy Hat */}
+      {ownedItems?.hat_cowboy === 'equipped' && (
+        <img
+          src="https://play.rosebud.ai/assets/Cowboy Hat.png?KP7E"
+          alt="Cowboy Hat"
+          style={{
+            position: 'absolute',
+            top: '-10px', // Adjust vertical position for Cowboy Hat
+            left: '15px', // Adjust horizontal position
+            width: '70px', // Adjust size
+            height: 'auto',
+            zIndex: 21,
+            transform: 'rotate(-8deg)', // Slight tilt
+            pointerEvents: 'none',
+          }}
+        />
+      )}
     </div>
   );
 };
-
-export default Frog;

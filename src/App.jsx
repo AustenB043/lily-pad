@@ -1,29 +1,37 @@
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import React, { useState } from 'react';
+import { TitleScreen } from './TitleScreen';
 import { LilyPadGame } from './LilyPadGame';
 
-// Initialize saved color from localStorage equivalent
-const initializeColorPreference = () => {
-  try {
-    const value = localStorage.getItem('frogColor');
-    if (value === null) {
-      localStorage.setItem('frogColor', 'green');
-    }
-  } catch (e) {
-    console.error('Failed to load frog color:', e);
-  }
-};
-// Initialize the color preference when the app starts
 
-export default function App() {
-  useEffect(() => {
-    initializeColorPreference();
-  }, []);
+export const App = () => {
+  const [gameState, setGameState] = useState('title'); // 'title' or 'game'
 
-  return (
-    <div style={{ height: '100vh', width: '100vw' }}>
-      <LilyPadGame />
+  const startGame = () => {
+    setGameState('game');
+  };
+
+return (
+    <div className="app-container" style={{
+      width: '100%',
+      height: '100%',
+      overflow: 'hidden',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      background: 'linear-gradient(to bottom, #a1c4fd, #c2e9fb)', // Light blue gradient background
+    }}>
+      {gameState === 'title' && <TitleScreen onStartGame={startGame} />}
+      {gameState === 'game' && (
+        <div className="game-wrapper" style={{
+          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+          borderRadius: '15px',
+          overflow: 'hidden', // Ensure game stays within bounds
+        }}>
+          <LilyPadGame />
+        </div>
+      )}
     </div>
-  );  
-  
-}
+  );
+};
+
+export default App;
