@@ -1,0 +1,29 @@
+import React, { useEffect } from 'react';
+import { View } from 'react-native';
+import { LilyPadGame } from './LilyPadGame';
+
+// Initialize saved color from localStorage equivalent
+const initializeColorPreference = () => {
+  try {
+    const value = localStorage.getItem('frogColor');
+    if (value === null) {
+      localStorage.setItem('frogColor', 'green');
+    }
+  } catch (e) {
+    console.error('Failed to load frog color:', e);
+  }
+};
+// Initialize the color preference when the app starts
+
+export default function App() {
+  useEffect(() => {
+    initializeColorPreference();
+  }, []);
+
+  return (
+    <div style={{ height: '100vh', width: '100vw' }}>
+      <LilyPadGame />
+    </div>
+  );  
+  
+}
