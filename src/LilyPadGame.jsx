@@ -182,24 +182,17 @@ export const LilyPadGame = () => {
         const colorName = itemId.split('_')[1];
         handleFrogColorChange(colorName);
       }
-      // If a hat was purchased, equip it
+      // If a hat was purchased, equip it using the just-updated items list
       if (itemId.startsWith('hat_')) {
-         handleHatSelection(itemId); // Equip the purchased hat
+         handleHatSelection(itemId, newOwnedItems); // Pass the updated items
       }
     }
   };
-  // Handle selecting a hat (or null for no hat)
-  const handleHatSelection = (hatId) => {
-      // Update ownedItems state to reflect which hat is equipped (or none)
-      // We might need a different state variable like `equippedHat` later
-      // For now, let's assume `ownedItems` structure might indicate equipped status
-      // This logic needs refinement based on how equipped status is managed.
+  // Handle selecting a hat (or null for no hat), accepting current items state
+  const handleHatSelection = (hatId, currentItems = ownedItems) => { // Accept currentItems, default to state
       console.log("Selected hat:", hatId);
-      // Example: Update a hypothetical 'equippedHat' state
-      // setEquippedHat(hatId); 
-      // TEMPORARY: To make the hat appear/disappear based on selection for now
-      // We will refine how 'equipped' status is stored later.
-      const newOwnedItems = { ...ownedItems };
+      // Use the passed currentItems or the component's state
+      const newOwnedItems = { ...currentItems };
       // Clear existing equipped hats (assuming only one can be equipped)
       Object.keys(newOwnedItems).forEach(key => {
           if (key.startsWith('hat_') && newOwnedItems[key] === 'equipped') {
@@ -207,9 +200,11 @@ export const LilyPadGame = () => {
           }
       });
       // Mark the selected hat as equipped (if not null and owned)
+      // Ensure the hat exists in the *new* items map before equipping
       if (hatId && newOwnedItems[hatId]) {
            newOwnedItems[hatId] = 'equipped'; // Use 'equipped' status temporarily
       }
+      // Update the state and localStorage with the final result
       setOwnedItems(newOwnedItems);
       localStorage.setItem('froggyOwnedItems', JSON.stringify(newOwnedItems));
   };

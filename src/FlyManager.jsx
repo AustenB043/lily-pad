@@ -49,10 +49,10 @@ export const FlyManager = ({ frogPosition, lilyPads = [], gameWidth, gameHeight,
     // Only spawn flies if we have lily pads
     if (lilyPads.length === 0 || !gameWidth || !gameHeight) return; // Check game dimensions too
     const interval = setInterval(() => {
-      if (flies.length < 8) { // Increased maximum flies since we removed manual spawning
+      if (flies.length < 8) {
         spawnFly();
       }
-    }, 2000 + Math.random() * 3000); // More frequent spawning (2-5 seconds)
+    }, 1000 + Math.random() * 2000); // Even more frequent spawning (1-3 seconds)
     
     return () => clearInterval(interval);
   }, [flies.length, lilyPads, gameWidth, gameHeight]); // Add game dimensions to dependency array

@@ -17,7 +17,12 @@ export const StoreModal = ({ isOpen, onClose, score, ownedItems = {}, onPurchase
         setNotification('You already own this item!');
       } else {
         onPurchase(itemId, cost); // Notify parent to handle purchase logic
-        setNotification(`Purchased ${itemId.replace('_', ' ')}!`);
+        // Create a user-friendly name for the notification
+        let friendlyName = itemId.replace('_', ' ');
+        if (itemId === 'hat_placeholder') friendlyName = 'Basic Hat';
+        if (itemId === 'hat_cowboy') friendlyName = 'Cowboy Hat';
+        if (itemId.startsWith('color_')) friendlyName = `${friendlyName.charAt(0).toUpperCase() + friendlyName.slice(1)} Color`;
+        setNotification(`Purchased ${friendlyName}!`);
       }
     } else {
       setNotification('Not enough flies!');
